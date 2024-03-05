@@ -3,22 +3,22 @@ const app = express();
 const cors = require('cors');
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const {Schema} = mongoose;
 
-mongoose.connect(process.env.MONGO_URI);
+mongoose.connect(process.env.DB_URL);
 
 const UserSchema = new Schema({
   username: String,
 });
 const User = mongoose.model('User', UserSchema);
 
-const ExerciseSchema = new Schema({
+let ExerciseSchema = new Schema({
   user_id: {type: String, required: true},
   description: String,
   duration: Number,
   date: Date,
 });
-const Exercise = mongoose.model('Exercise', ExerciseSchema);
+let Exercise = mongoose.model('Exercise', ExerciseSchema);
 
 app.use(cors());
 app.use(express.static('public'));
@@ -28,11 +28,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/users', async (req, res) => {
-  const users = await User.find({}).select('_id username');
+  const users = await User.find({}).select('_id username')
     if(!users){
-      res.send("No users");
+      res.send("No users")
     } else {
-      res.json(users);
+      res.json(users)
     }
 })
 
@@ -44,7 +44,7 @@ app.post('/api/users', async (req, res) => {
   
   try{
     const user = await userObj.save()
-    console.log(user);
+    console.log(user)
     res.json(user)
   } catch(err){
     console.error(err)
@@ -62,22 +62,22 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
       res.send("Could not find user")
     } else {
       const exerciseObj = new Exercise({
-        user_id: user._id,
         description,
         duration,
         date: date ? new Date(date) : new Date(),
+        user_id: user._id,
       })
       const exercise = await exerciseObj.save()
       res.json({
-        _id: user._id,
         username: user.username,
         description: exercise.description,
         duration: exercise.duration,
-        date: new Date(exercise.date).toDateString(),        
+        date: new Date(exercise.date).toDateString(),
+        _id: user._id,
       })
     }
   } catch(err) {
-      console.log(err);
+      console.log(err)
       res.send("There was an error saving the exercise")
   }
 } )
@@ -96,13 +96,13 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     dateObj["$gte"] = new Date(from)
   }
   if (to) {
-    dateObj["$lte"] = new Date(to)
+    dateObj['$lte'] = new Date(to)
   }
   let filter = {
     user_id: id,
   }
   if (from || to){
-    filter.date = dateObj;
+    filter.date = dateObj
   }
 
   const exercises = await Exercise.find(filter).limit(+limit ?? 500)
